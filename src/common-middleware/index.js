@@ -17,7 +17,9 @@ exports.requireSignin = (req, res, next) => {
 exports.isUser = (req, res, next) => {
   if (req.user.role !== "user") {
     //   console.log(req.body.role);
-    return res.status(400).json({ message: " USER ACCESS DENIED" });
+    return res
+      .status(400)
+      .json({ message: " USER ACCESS DENIED " + req.user.role });
   }
   next();
 };
