@@ -1,9 +1,10 @@
 const express = require("express");
-const { requireSignin, isAdmin } = require("../../common-middleware/index");
+const { requireSignin, isAdmin } = require("../common-middleware/index");
 const router = express.Router();
 const {
   createProduct,
-} = require("../../controllers/productController/productController");
+  getProductsBySlug,
+} = require("../controllers/productController");
 const multer = require("multer"); //npm package to work with file upload.
 const shortid = require("shortid");
 const path = require("path");
@@ -12,7 +13,7 @@ const path = require("path");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // cb(null, path.join(path.dirname(__dirname), "uploads")); // __dirname--> current directory,dirname.(__dirname)--> current directorys parent directory
-    cb(null, path.join(path.dirname(path.dirname(__dirname)), "uploads")); // __dirname--> current directory,dirname.(__dirname)--> current directorys parent directory
+    cb(null, path.join(path.dirname(__dirname), "uploads")); // __dirname--> current directory,dirname.(__dirname)--> current directorys parent directory
   },
   filename: function (req, file, cb) {
     //cb(null, file.fieldname + '-' + Date.now())
@@ -31,4 +32,5 @@ router.post(
   createProduct
 );
 
+router.get("/products/:slug", getProductsBySlug);
 module.exports = router;

@@ -3,12 +3,12 @@ const router = express.Router();
 const {
   validateUserSignUpRequest,
   isRequestValidated,
-} = require("../../validators/user-auth-validator");
+} = require("../validators/user-auth-validator");
 
 const {
   signUpUser,
   signInUser,
-} = require("../../controllers/userController/userAuth");
+} = require("../controllers/userAuth");
 
 router.post(
   "/user/signup",

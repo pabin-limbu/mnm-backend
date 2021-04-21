@@ -26,7 +26,7 @@ exports.isUser = (req, res, next) => {
 
 exports.isAdmin = (req, res, next) => {
   if (req.user.role !== "admin") {
-    //   console.log(req.body.role);
+    //   console.log(req.body.role);  
     return res.status(400).json({ message: " ADMIN ACCESS DENIED" });
   }
   next();

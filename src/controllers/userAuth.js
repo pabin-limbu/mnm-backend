@@ -1,15 +1,14 @@
-const User = require("../../models/user");
+const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-
-//signUp admin
-exports.signUpAdmin = (req, res) => {
+//signup User
+exports.signUpUser = (req, res) => {
   User.findOne({ email: req.body.email }).exec((err, user) => {
     if (user) {
-      return res.status(400).json({ message: "Admin User Already Exist" });
+      return res.status(400).json({ message: "User Already Exist" });
     } else if (err) {
-      return res.status(400).json({
-        message: "something went wrong LOCATION:adminAuth /Controller",
-      });
+      return res
+        .status(400)
+        .json({ message: "something went wrong LOCATION:userAuth" });
     } else {
       const { firstName, lastName, email, password } = req.body;
       const _user = new User({
@@ -18,27 +17,26 @@ exports.signUpAdmin = (req, res) => {
         email,
         password,
         userName: Math.random().toString(),
-        role: "admin",
       });
 
       _user.save((err, data) => {
         if (err) {
           return res.status(400).json({ message: err });
         } else if (data) {
-          return res.status(200).json({ message: "Admin created" });
+          return res.status(200).json({ message: "user created" });
         } else {
-          return res.status(400).json({
-            message: "Something went wrong LOCATON:adminAuth /controller",
-          });
+          return res
+            .status(400)
+            .json({ message: "Something went wrong LOCATON:userAuth" });
         }
       });
     }
   });
 };
 
-//signIn admin
-exports.signInAdmin = (req, res) => {
-  User.findOne({ email: req.body.email }).exec((err, user) => {
+//signIn user
+exports.signInUser = (req, res) => {
+  User.findOne({ email: req.body.email, role: "user" }).exec((err, user) => {
     if (err) {
       return res.status(400).json({ error });
     } else if (user) {

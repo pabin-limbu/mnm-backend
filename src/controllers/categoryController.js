@@ -1,5 +1,5 @@
 const slugify = require("slugify");
-const Category = require("../../models/category");
+const Category = require("../models/category");
 
 //create CategoryList with Sub category
 function createCategories(categories, parentId = null) {
@@ -17,6 +17,7 @@ function createCategories(categories, parentId = null) {
       _id: cate._id,
       name: cate.name,
       slug: cate.slug,
+      parentId: cate.parentId,
       children: createCategories(categories, cate._id), // recursive
     });
   }
@@ -44,7 +45,7 @@ exports.addCategory = (req, res) => {
   });
 };
 
-//fetch all categories
+//fetch all categories and return with sub categories
 exports.getCategories = (req, res) => {
   Category.find({}).exec((error, categories) => {
     if (error) {
@@ -53,8 +54,17 @@ exports.getCategories = (req, res) => {
 
     if (categories) {
       const categoryList = createCategories(categories); //to create a category-->subcategory.
-
+      //console.log(categoryList[0]);
       return res.status(200).json({ categoryList });
     }
+  });
+};
+//fetch all categories and return normal list
+exports.getCategoriesLinearList = (req, res) => {
+  Category.find({}).exec((error, categories) => {
+    if (error) {
+      return res.status(400).json({ error });
+    }
+    return res.status(200).json({ categories });
   });
 };

@@ -1,4 +1,4 @@
-const Cart = require("../../models/cart");
+const Cart = require("../models/cart");
 
 exports.addItemToCart = async (req, res) => {
   //check if cart for current user exist
