@@ -13,10 +13,12 @@ const categoryRouter = require("./src/routes/categoryRoute");
 const productRouter = require("./src/routes/productRoute");
 const cartRouter = require("./src/routes/cartRoute");
 const initialDataRouter = require("./src/routes/initialdataRoute");
+const pageRouter = require("./src/routes/pageRoute");
 //connect mongo db.
 mongoose
   .connect(keys.mongodb.ATLAS_URI, {
     useNewUrlParser: true,
+    useFindAndModify: false,
     useUnifiedTopology: true,
     useCreateIndex: true,
   })
@@ -33,6 +35,7 @@ app.use("/api", categoryRouter);
 app.use("/api", productRouter);
 app.use("/api", cartRouter);
 app.use("/api", initialDataRouter);
+app.use("/api", pageRouter);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running at port ${process.env.PORT}`);

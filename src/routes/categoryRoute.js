@@ -8,12 +8,13 @@ const {
   isCategoryValidated,
 } = require("../validators/categoryValidator");
 
-
 const router = express.Router();
 const {
   addCategory,
   getCategories,
   getCategoriesLinearList,
+  updateCategories,
+  deleteCategories,
 } = require("../controllers/categoryController");
 
 //multer configuration to set the destination of file and custom file name.
@@ -40,5 +41,10 @@ router.post(
 );
 router.get("/category/getcategory", getCategories);
 router.get("/category/getcategoryList", getCategoriesLinearList);
-
+router.post(
+  "/category/updateCategory",
+  upload.single("categoryImage"),
+  updateCategories
+);
+router.post("/category/delete", deleteCategories);
 module.exports = router;

@@ -2,6 +2,7 @@ const Cateory = require("../models/category");
 const Product = require("../models/product");
 //function
 function createCategories(categories, parentId = null) {
+  // console.log(categories);
   //recursive function to stack children category under parent category.
   const categoryList = [];
   let category;
@@ -13,16 +14,21 @@ function createCategories(categories, parentId = null) {
 
   if (parentId == null) {
     category = categories.filter((cat) => cat.parentId == undefined);
+    // console.log(category)
   } else {
     category = categories.filter((cat) => cat.parentId == parentId);
+    //console.log(category);
   }
 
   for (let cate of category) {
+    //  console.log(cate);
     categoryList.push({
       _id: cate._id,
       name: cate.name,
       slug: cate.slug,
       parentId: cate.parentId,
+      type: cate.type ? cate.type : "undefined", // change this later.
+      isfeatured: cate.isfeatured ? cate.isfeatured : "false",
       children: createCategories(categories, cate._id),
     });
   }
@@ -33,8 +39,11 @@ function createCategories(categories, parentId = null) {
 exports.initialData = async (req, res) => {
   const categories = await Cateory.find({}).exec();
   const products = await Product.find({})
-    .select("_id name quantity slug price description productPictures category")
+    .select(
+      "_id name quantity slug price description productPictures category isfeatured"
+    )
     .populate({ path: "category", select: "_id name" })
     .exec();
+  //console.log(categories);
   res.status(200).json({ categories: createCategories(categories), products });
 };

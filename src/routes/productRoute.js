@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   createProduct,
   getProductsBySlug,
+  updateProduct,
 } = require("../controllers/productController");
 const multer = require("multer"); //npm package to work with file upload.
 const shortid = require("shortid");
@@ -31,6 +32,8 @@ router.post(
   upload.array("productPicture"),
   createProduct
 );
+
+router.post("/product/update", upload.none(), updateProduct);
 
 router.get("/products/:slug", getProductsBySlug);
 module.exports = router;

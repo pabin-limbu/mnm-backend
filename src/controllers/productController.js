@@ -75,3 +75,25 @@ exports.getProductsBySlug = (req, res) => {
       }
     });
 };
+
+exports.updateProduct = async (req, res) => {
+  const { _id, name, price, description, category, quantity, isfeatured } =
+    req.body;
+  const newProduct = {
+    name,
+    price,
+    description,
+    category,
+    quantity,
+    isfeatured,
+  };
+
+  //update product based on the id.
+  const updateProduct = await Product.findOneAndUpdate(
+    { _id: _id },
+    newProduct,
+    { new: true }
+  );
+
+  res.status(200).json({ updateProduct });
+};

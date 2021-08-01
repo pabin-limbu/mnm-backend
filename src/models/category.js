@@ -12,10 +12,13 @@ const categorySchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    type: { type: String },
     parentId: {
       type: String,
     },
+    isfeatured: Boolean,
   },
+
   { timestamps: true }
 );
 module.exports = mongoose.model("Category", categorySchema);
