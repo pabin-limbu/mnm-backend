@@ -15,6 +15,7 @@ const cartRouter = require("./src/routes/cartRoute");
 const initialDataRouter = require("./src/routes/initialdataRoute");
 const pageRouter = require("./src/routes/pageRoute");
 //connect mongo db.
+
 mongoose
   .connect(keys.mongodb.ATLAS_URI, {
     useNewUrlParser: true,
@@ -25,7 +26,7 @@ mongoose
   .then(() => {
     console.log("Database connected");
   });
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(bodyParser.json()); //parse incoming payload into json format.
 //expose static file to browser like upload file where images are stored.
 app.use("/public", express.static(path.join(__dirname, "src/uploads")));
