@@ -5,6 +5,9 @@ const {
   createProduct,
   getProductsBySlug,
   updateProduct,
+  getFeaturedProducts,
+  getProductByCategory,
+  getProductByCategoryId,
 } = require("../controllers/productController");
 const multer = require("multer"); //npm package to work with file upload.
 const shortid = require("shortid");
@@ -35,5 +38,8 @@ router.post(
 
 router.post("/product/update", upload.none(), updateProduct);
 
+router.get("/products/featured", getFeaturedProducts);
+router.post("/products/productsbycategoryid", getProductByCategoryId);
+//router.get("/products/featuredcategoryproducts", getProductByCategory);
 router.get("/products/:slug", getProductsBySlug);
 module.exports = router;
