@@ -16,7 +16,7 @@ const initialDataRouter = require("./src/routes/initialdataRoute");
 const pageRouter = require("./src/routes/pageRoute");
 //connect mongo db.
 // const corsoption = {origin:'http://13.126.89.195:3000'}
-const corsoption = { origin: [`${process.env.CORS_LOCALHOSTADMIN}`,`${process.env.CORS_LOCALHOSTCLIENT}`] };
+const corsoption = { origin: [`${process.env.CORS_ADMIN}`,`${process.env.CORS_CLIENT}`] };
 
 app.use(cors(corsoption));
 
