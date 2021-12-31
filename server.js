@@ -15,10 +15,8 @@ const cartRouter = require("./src/routes/cartRoute");
 const initialDataRouter = require("./src/routes/initialdataRoute");
 const pageRouter = require("./src/routes/pageRoute");
 //connect mongo db.
-const corsoption = {origin:'http://13.126.89.195:5000'}
-
-
-
+// const corsoption = {origin:'http://13.126.89.195:3000'}
+const corsoption = { origin: [`${process.env.CORS_LOCALHOSTADMIN}`,`${process.env.CORS_LOCALHOSTCLIENT}`] };
 
 app.use(cors(corsoption));
 
@@ -47,4 +45,3 @@ app.use("/api", pageRouter);
 app.listen(process.env.PORT, () => {
   console.log(`Server running at port ${process.env.PORT}`);
 });
-
