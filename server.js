@@ -38,9 +38,7 @@ mongoose
 
 app.use(bodyParser.json()); //parse incoming payload into json format.
 //expose static file to browser like upload file where images are stored.
-app.use("/", (req, res) => {
-  res.send("hello midnight madira");
-});
+
 app.use("/public", express.static(path.join(__dirname, "src/uploads")));
 app.use("/api", userAuthRouter);
 app.use("/api", adminAuthRouter);
@@ -52,6 +50,10 @@ app.use("/api", pageRouter);
 app.use("/api", orderRouter);
 app.use("/api", bannerRouter);
 app.use("/api", userCommentRouter);
+
+app.use("/", (req, res) => {
+  res.send("hello midnight madira hi");
+});
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running at port ${process.env.PORT}`);
