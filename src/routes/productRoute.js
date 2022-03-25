@@ -6,8 +6,10 @@ const {
   getProductsBySlug,
   updateProduct,
   getFeaturedProducts,
-  getProductByCategory,
+  getCategoryChildrenWithProduct,
   getProductByCategoryId,
+  getProductById,
+  deleteProduct,
 } = require("../controllers/productController");
 const multer = require("multer"); //npm package to work with file upload.
 const shortid = require("shortid");
@@ -35,11 +37,15 @@ router.post(
   upload.array("productPicture"),
   createProduct
 );
-
+//passed
 router.post("/product/update", upload.none(), updateProduct);
-
 router.get("/products/featured", getFeaturedProducts);
 router.post("/products/productsbycategoryid", getProductByCategoryId);
-//router.get("/products/featuredcategoryproducts", getProductByCategory);
+//testign phase
+// router.post("/products/getcategorywithproduct", getCategoryChildrenWithProduct);
+//passed
 router.get("/products/:slug", getProductsBySlug);
+router.get("/products/productbyid/:id", getProductById); // value after ":" are taken as parameter by API.
+router.post("/products/delete", deleteProduct);
+
 module.exports = router;

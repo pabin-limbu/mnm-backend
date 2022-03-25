@@ -2,6 +2,9 @@ const Product = require("../models/product");
 const Category = require("../models/category");
 
 const slugify = require("slugify");
+
+const fs = require("fs");
+const path = require("path");
 const product = require("../models/product");
 
 exports.createProduct = (req, res) => {
@@ -36,42 +39,77 @@ exports.createProduct = (req, res) => {
   });
 };
 
-exports.getProductsBySlug = (req, res) => {
+exports.getProductsBySlug = async (req, res) => {
+  //v1.depreciated -- delete later.
+  //Api fing category with matching slug, if matched get all product having this categoryid.
+  // find category id with slug first and then using that id find items.
+  // Category.findOne({ slug: slug })
+  //   .select("_id")
+  //   .exec((error, category) => {
+  //     if (error) {
+  //       return res.status(400).json({ error });
+  //     }
+  //     if (category) {
+  //       Product.find({ category: category._id })
+  //         .populate("category", "slug")
+  //         .exec((error, products) => {
+  //           if (error) {
+  //             res.status(400).json({ error });
+  //           }
+  //           if (products.length > 0) {
+  //             res.status(200).json({
+  //               products,
+  //             });
+  //           }
+  //         });
+  //     } else {
+  //       res.status(200).json({ message: `${slug} not available` });
+  //     }
+  //   });
+
+  //v2.Passed
   const { slug } = req.params;
-  Category.findOne({ slug: slug })
-    .select("_id")
-    .exec((error, category) => {
-      if (error) {
-        return res.status(400).json({ error });
+  //get category id of current slug.
+  const catId = await Category.findOne({ slug: slug }).select("_id").exec();
+
+  if (catId !== null) {
+    //fetch all category to create category stack.
+    const allCategory = await Category.find({});
+    const formatedCategories = createCategories(allCategory);
+
+    //fetch cateoryid and its sub-category id.
+    const category = await getSelectedCategory(
+      JSON.stringify(catId._id),
+      formatedCategories
+    );
+    // fetch list of category and inner category.
+    const categoryList = await extractInnerCategoryList(category);
+    //get all product of this categories.
+    product.find({ category: categoryList }).exec((err, products) => {
+      if (err) {
+        res.status(401).json({ err });
       }
-      if (category) {
-        Product.find({ category: category._id }).exec((error, products) => {
-          if (error) {
-            res.status(400).json({ error });
-          }
-          if (products.length > 0) {
-            res.status(200).json({
-              products,
-              productsByPrice: {
-                under5k: products.filter((product) => product.price <= 5000),
-                under10k: products.filter(
-                  (product) => product.price > 5000 && product.price <= 10000
-                ),
-                under15k: products.filter(
-                  (product) => product.price > 10000 && product.price <= 15000
-                ),
-                under20k: products.filter(
-                  (product) => product.price > 15000 && product.price <= 20000
-                ),
-                under30k: products.filter(
-                  (product) => product.price > 20000 && product.price <= 30000
-                ),
-              },
-            });
-          }
-        });
-      } else {
-        res.status(200).json({ message: "product not available" });
+      if (products) {
+        res.status(200).json({ products });
+      }
+    });
+  } else {
+    res.status(400).json({ message: "no category with that name is found" });
+  }
+};
+
+exports.getProductById = async (req, res) => {
+  const { id } = req.params;
+  //fetch individual product by its ID.
+  await Product.findOne({ _id: id })
+    .populate("category", "slug")
+    .exec((err, data) => {
+      if (err) {
+        err.msg = "data not found in database collection";
+        res.status(401).json({ err });
+      }
+      if (data) {
+        res.status(200).json({ data });
       }
     });
 };
@@ -97,166 +135,160 @@ exports.updateProduct = async (req, res) => {
 
   res.status(200).json({ updateProduct });
 };
+
 //fetch all featured product.
 exports.getFeaturedProducts = async (req, res) => {
-  const product = await Product.find({ isfeatured: true });
+  const product = await Product.find({ isfeatured: true })
+    .populate("category", "slug")
+    .exec();
   //console.log(product);
   res.status(200).json({ product });
 };
 
-//create CategoryList with Sub category
-function createCategories(categories, parentId = null) {
-  //recursive function to stack children category under parent category.
-  const categoryList = [];
-  let category;
-  if (parentId == null) {
-    category = categories.filter((cat) => cat.parentId == undefined);
-  } else {
-    category = categories.filter((cat) => cat.parentId == parentId);
-  }
-
-  for (let cate of category) {
-    categoryList.push({
-      _id: cate._id,
-      name: cate.name,
-      slug: cate.slug,
-      parentId: cate.parentId,
-      type: cate.type ? cate.type : "undefined", // change this later
-      children: createCategories(categories, cate._id), // recursive
-    });
-  }
-
-  return categoryList;
-}
-
-//create CategoryList with Sub category
-function createCategories(categories, parentId = null) {
-  //recursive function to stack children category under parent category.
-  const categoryList = [];
-  let category;
-  if (parentId == null) {
-    category = categories.filter((cat) => cat.parentId == undefined);
-  } else {
-    category = categories.filter((cat) => cat.parentId == parentId);
-  }
-
-  for (let cate of category) {
-    categoryList.push({
-      _id: cate._id,
-      name: cate.name,
-      slug: cate.slug,
-      parentId: cate.parentId,
-      type: cate.type ? cate.type : "undefined", // change this later
-      children: createCategories(categories, cate._id), // recursive
-    });
-  }
-
-  return categoryList;
-}
-
-const getInnerCategoryBasedOnCategory = async (
-  //test
-  categoryId,
-  formatedCategories
-) => {
-  let mainCat = null;
-  let catArray = [];
-  let validParentId = categoryId;
-
-  const getCat = (categoryId, formatedCategories) => {
-    for (let i = 0; i < formatedCategories.length; i++) {
-      if (
-        formatedCategories[i].parentId == validParentId ||
-        formatedCategories[i]._id == categoryId
-      ) {
-        if (mainCat === null) {
-          mainCat = formatedCategories[i].name;
-          catArray.push({ [formatedCategories[i].name]: [] });
-        } else {
-          //  do nothing
-        }
-        catArray[0][mainCat].push(formatedCategories[i]._id);
-        //catArray.push(formatedCategories[i]._id);
-
-        if (formatedCategories[i].children.length > 0) {
-          validParentId = formatedCategories[i]._id;
-        }
-      }
-      if (formatedCategories[i].children.length > 0) {
-        getCat(categoryId, formatedCategories[i].children);
-      }
-    }
-  };
-  getCat(categoryId, formatedCategories);
-  return catArray;
-};
-
-//this is jst for test
-const getCategoryWithItsChildren = (categoryId, formatedCategories) => {
-  //test
-  const getCat = (categoryId, formatedCategories) => {
-    for (let i = 0; i < formatedCategories.length; i++) {
-      if (formatedCategories[i]._id == categoryId) {
-        return formatedCategories[i];
-      }
-      if (formatedCategories[i].children.length > 0) {
-        getCat(categoryId, formatedCategories[i].children);
-      }
-    }
-  };
-  return getCat(categoryId, formatedCategories);
-};
-
-const getProductBasedOnCategory = async (cateroryList) => {
-  //test
-  let products = [];
-  const value = await Product.find(
-    {
-      category: "6094e8d6b7471438ec34122f",
-    },
-    "_id name"
-  ).exec();
-
-  //console.log(value);
-  // problem function is returning before the data is fetched.
-  return value;
-};
-
-exports.getProductByCategory = async (req, res) => {
-  //test
-  const allCategory = await Category.find({}).exec();
-  const formatedCategories = createCategories(allCategory);
-  const { categoryId } = req.body;
-  if (categoryId instanceof Array) {
-  } else {
-    //fetch category and check sub categories.
-    const category = await getInnerCategoryBasedOnCategory(
-      categoryId,
-      formatedCategories
-    );
-    //console.log(category);
-
-    //according to this arrray fetch all product related to it.
-    const testresult = getCategoryWithItsChildren(
-      categoryId,
-      formatedCategories
-    );
-    console.log(testresult);
-
-    const result = await getProductBasedOnCategory(category);
-    // console.log(result);
-    res.status(200).json({ result });
-  }
-};
-
+//product based on category id.
 exports.getProductByCategoryId = async (req, res) => {
   const arr = req.body.featuredCategory;
   const categoryWithProduct = [];
   for (let i = 0; i < arr.length; i++) {
-    const result = await Product.find({ category: arr[i]._id }).exec();
+    const result = await Product.find({ category: arr[i]._id })
+      .populate("category", "slug")
+      .exec();
     let newCatWithProduct = { ...arr[i], product: result };
     categoryWithProduct.push(newCatWithProduct);
   }
-
   res.status(200).send(categoryWithProduct);
 };
+
+exports.deleteProduct = async (req, res) => {
+  console.log("api reached");
+
+  //delete product image from Upload directory.
+  if (req.body.productPictures.length > 0) {
+    req.body.productPictures.forEach((element) => {
+      if (
+        fs.existsSync(
+          path.join(path.dirname(__dirname), "uploads/") + element.img
+        )
+      ) {
+        fs.unlink(
+          path.join(path.dirname(__dirname), "uploads/") + element.img,
+          (err) => {
+            if (err) {
+              // return res.status(400).json({ err });
+              console.log(err);
+            }
+          }
+        );
+      }
+    });
+  }
+
+  //delete product data from database
+  Product.findByIdAndRemove(req.body._id, (err, data) => {
+    if (data) {
+      return res.status(200).json({ data });
+    }
+    if (data === null) {
+      return res.status(200).json({ message: "no data available" });
+    }
+    if (err) {
+      console.log(err);
+    }
+  }).exec();
+};
+
+//create CategoryList with Sub category
+function createCategories(categories, parentId = null) {
+  //recursive function to stack children category under parent category.
+  const categoryList = [];
+  let category;
+  if (parentId == null) {
+    category = categories.filter((cat) => cat.parentId == undefined);
+  } else {
+    category = categories.filter((cat) => cat.parentId == parentId);
+  }
+
+  for (let cate of category) {
+    categoryList.push({
+      _id: cate._id,
+      name: cate.name,
+      slug: cate.slug,
+      parentId: cate.parentId,
+      type: cate.type ? cate.type : "undefined", // change this later
+      children: createCategories(categories, cate._id), // recursive
+    });
+  }
+
+  return categoryList;
+}
+
+const getSelectedCategory = async (categoryId, formatedCategories) => {
+  //get selected category along with is children category.
+  /**
+   *loop through all category and iner category and when the id  matched imidiately return it.
+   */
+
+  //closure is sused because recurse function return statement could not be accurate.
+  let result = [];
+  function recurseCategory(categoryId, formatedCategories) {
+    for (let i = 0; i < formatedCategories.length; i++) {
+      if (JSON.stringify(formatedCategories[i]._id) == categoryId) {
+        result.push(formatedCategories[i]);
+      }
+
+      if (formatedCategories[i].children.length > 0) {
+        recurseCategory(categoryId, formatedCategories[i].children);
+      }
+    }
+  }
+  recurseCategory(categoryId, formatedCategories);
+  return result;
+};
+
+const extractInnerCategoryList = async (category) => {
+  let categoryArray = category;
+  const categoryList = [];
+  function recurseArray(categoryArray) {
+    for (let i = 0; i < categoryArray.length; i++) {
+      categoryList.push(categoryArray[i]._id);
+      if (categoryArray[i].children.length > 0) {
+        recurseArray(categoryArray[i].children);
+      }
+    }
+  }
+  recurseArray(categoryArray);
+  return categoryList;
+};
+
+//v2.Testing-- delete later
+// exports.getCategoryChildrenWithProduct = async (req, res) => {
+//   const { slug, catid } = req.body;
+//   //get category id of current slug.
+//   const catId = await Category.findOne({ slug: slug }).select("_id").exec();
+
+//   if (catId !== null) {
+//     //fetch all category to create category stack.
+//     const allCategory = await Category.find({});
+//     const formatedCategories = createCategories(allCategory);
+
+//     //fetch cateoryid and its sub-category id.
+//     const category = await getSelectedCategory(
+//       JSON.stringify(catId._id),
+//       formatedCategories
+//     );
+
+//     // fetch list of category and inner category.
+//     const categoryList = await extractInnerCategoryList(category);
+//     //get all product of this categories.
+//     product.find({ category: categoryList }).exec((err, data) => {
+//       if (err) {
+//         res.status(401).json({ err });
+//       }
+//       if (data) {
+//         res.status(200).json({ data });
+//       }
+//     });
+//   } else {
+//     res.status(400).json({ message: "no category with that name is found" });
+//   }
+// };
