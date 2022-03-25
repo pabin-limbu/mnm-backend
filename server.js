@@ -38,8 +38,8 @@ mongoose
 
 app.use(bodyParser.json()); //parse incoming payload into json format.
 //expose static file to browser like upload file where images are stored.
-app.use("/", () => {
-  "hellow midnight madira";
+app.use("/", (req, res) => {
+  res.send("hello midnight madira");
 });
 app.use("/public", express.static(path.join(__dirname, "src/uploads")));
 app.use("/api", userAuthRouter);
