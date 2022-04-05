@@ -4,7 +4,7 @@ const path = require("path");
 
 exports.addBanner = async (req, res) => {
   try {
-    const { name, linkType, slug, category } = req.body;
+    const { name, linkType, slug, category, slugId } = req.body;
     const bannerImage = req.file.filename;
 
     const banner = new Banner({
@@ -12,6 +12,7 @@ exports.addBanner = async (req, res) => {
       slug: slug,
       linkType: linkType,
       bannerImage: bannerImage,
+      slugId: slugId,
       category: category,
       createdBy: req.user._id,
     });
@@ -31,14 +32,16 @@ exports.addBanner = async (req, res) => {
 
 exports.getBanner = async (req, res) => {
   try {
-    await Banner.find({}).exec((error, data) => {
-      if (data) {
-        return res.status(200).json({ data });
-      }
-      if (error) {
-        return res.status(401).json({ error });
-      }
-    });
+    Banner.find({})
+      .populate({ path: "category", select: "_id slug" })
+      .exec((error, data) => {
+        if (data) {
+          return res.status(200).json({ data });
+        }
+        if (error) {
+          return res.status(401).json({ error });
+        }
+      });
   } catch (error) {
     return res.status(400).json({ error });
   }
@@ -63,17 +66,15 @@ exports.deleteBanner = async (req, res) => {
     );
   }
   //delete banner data from database
-  Banner
-    .findByIdAndRemove(req.body._id, (err, data) => {
-      if (data) {
-        return res.status(200).json({ data });
-      }
-      if (data === null) {
-        return res.status(200).json({ message: "no data available" });
-      }
-      if (err) {
-        console.log(err);
-      }
-    })
-    .exec();
+  Banner.findByIdAndRemove(req.body._id, (err, data) => {
+    if (data) {
+      return res.status(200).json({ data });
+    }
+    if (data === null) {
+      return res.status(200).json({ message: "no data available" });
+    }
+    if (err) {
+      console.log(err);
+    }
+  }).exec();
 };

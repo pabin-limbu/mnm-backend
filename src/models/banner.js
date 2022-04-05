@@ -5,6 +5,11 @@ const bannerSchema = new mongoose.Schema(
     slug: { type: String, required: true },
     bannerImage: { type: String },
     linkType: { type: String, required: true },
+    slugId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: false,
+    },
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",

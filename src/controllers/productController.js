@@ -7,6 +7,21 @@ const fs = require("fs");
 const path = require("path");
 const product = require("../models/product");
 
+exports.getProduct = (req, res) => {
+  try {
+    product.find({}).exec((err, data) => {
+      if (err) {
+        return res.status(401).json({ message: "no product found" });
+      }
+      if (data) {
+        return res.status(200).json({ data });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 exports.createProduct = (req, res) => {
   const { name, price, description, category, quantity } = req.body;
   //picture should be in array as it ca be multiple file.
