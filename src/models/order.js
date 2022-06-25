@@ -10,6 +10,7 @@ const addressSchema = new mongoose.Schema({
 });
 const orderSchema = new mongoose.Schema(
   {
+    orderId: { type: Number },
     user: {
       name: String,
       type: String,
@@ -25,6 +26,8 @@ const orderSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
         },
+        name: { type: String },
+        category: { type: Object },
         payablePrice: {
           type: Number,
           required: true,
@@ -42,7 +45,7 @@ const orderSchema = new mongoose.Schema(
     },
     paymentType: {
       type: String,
-      enum: ["cod", "card"],
+      enum: ["cash", "card"],
       required: true,
     },
     orderStatus: [

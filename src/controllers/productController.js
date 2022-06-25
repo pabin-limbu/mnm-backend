@@ -1,8 +1,6 @@
 const Product = require("../models/product");
 const Category = require("../models/category");
-
 const slugify = require("slugify");
-
 const fs = require("fs");
 const path = require("path");
 const product = require("../models/product");
@@ -55,33 +53,6 @@ exports.createProduct = (req, res) => {
 };
 
 exports.getProductsBySlug = async (req, res) => {
-  //v1.depreciated -- delete later.
-  //Api fing category with matching slug, if matched get all product having this categoryid.
-  // find category id with slug first and then using that id find items.
-  // Category.findOne({ slug: slug })
-  //   .select("_id")
-  //   .exec((error, category) => {
-  //     if (error) {
-  //       return res.status(400).json({ error });
-  //     }
-  //     if (category) {
-  //       Product.find({ category: category._id })
-  //         .populate("category", "slug")
-  //         .exec((error, products) => {
-  //           if (error) {
-  //             res.status(400).json({ error });
-  //           }
-  //           if (products.length > 0) {
-  //             res.status(200).json({
-  //               products,
-  //             });
-  //           }
-  //         });
-  //     } else {
-  //       res.status(200).json({ message: `${slug} not available` });
-  //     }
-  //   });
-
   //v2.Passed
   const { slug } = req.params;
   //get category id of current slug.
@@ -100,14 +71,17 @@ exports.getProductsBySlug = async (req, res) => {
     // fetch list of category and inner category.
     const categoryList = await extractInnerCategoryList(category);
     //get all product of this categories.
-    product.find({ category: categoryList }).exec((err, products) => {
-      if (err) {
-        res.status(401).json({ err });
-      }
-      if (products) {
-        res.status(200).json({ products });
-      }
-    });
+    product
+      .find({ category: categoryList })
+      .populate({ path: "category", select: "_id name" })
+      .exec((err, products) => {
+        if (err) {
+          res.status(401).json({ err });
+        }
+        if (products) {
+          res.status(200).json({ products });
+        }
+      });
   } else {
     res.status(400).json({ message: "no category with that name is found" });
   }
@@ -274,36 +248,3 @@ const extractInnerCategoryList = async (category) => {
   recurseArray(categoryArray);
   return categoryList;
 };
-
-//v2.Testing-- delete later
-// exports.getCategoryChildrenWithProduct = async (req, res) => {
-//   const { slug, catid } = req.body;
-//   //get category id of current slug.
-//   const catId = await Category.findOne({ slug: slug }).select("_id").exec();
-
-//   if (catId !== null) {
-//     //fetch all category to create category stack.
-//     const allCategory = await Category.find({});
-//     const formatedCategories = createCategories(allCategory);
-
-//     //fetch cateoryid and its sub-category id.
-//     const category = await getSelectedCategory(
-//       JSON.stringify(catId._id),
-//       formatedCategories
-//     );
-
-//     // fetch list of category and inner category.
-//     const categoryList = await extractInnerCategoryList(category);
-//     //get all product of this categories.
-//     product.find({ category: categoryList }).exec((err, data) => {
-//       if (err) {
-//         res.status(401).json({ err });
-//       }
-//       if (data) {
-//         res.status(200).json({ data });
-//       }
-//     });
-//   } else {
-//     res.status(400).json({ message: "no category with that name is found" });
-//   }
-// };

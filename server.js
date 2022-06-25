@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const dbconfig = require("./src/config/dbconfig");
 
 //routers
 const userAuthRouter = require("./src/routes/userAuthRoute");
@@ -33,6 +34,7 @@ mongoose
     useCreateIndex: true,
   })
   .then(() => {
+    dbconfig.configCouterCollection();
     console.log("Database connected");
   });
 
